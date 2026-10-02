@@ -1,0 +1,55 @@
+CREATE TABLE Seasons(
+    season_year_start INT PRIMARY KEY,
+    season_start_date DATE,
+    winning_team INT NULL REFERENCES Teams(team_id)
+);
+CREATE TABLE Games(
+    game_id INT PRIMARY KEY,
+    game_date DATE,
+    home_score INT,
+    away score INT,
+    home_team_id INT REFERENCES Teams(team_id),
+    away_team_id INT REFERENCES Teams(team_id),
+    season_year_start INT REFERENCES Seasons(season_year_start)
+);
+CREATE TABLE Teams(
+    team_id INT PRIMARY KEY,
+    name VARHCHAR(50),
+    abbreviation CHAR(3),
+    city VARCHAR(50),
+    arena_name VARCHAR(50)
+);
+CREATE TABLE Players(
+    player_id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    nickname VARCHAR(50),
+    birth_date DATE,
+    height INT,
+    weight INT,
+    nationality VARCHAR(50),
+    draft_year INT,
+    draft_round INT,
+    draft_pick INT,
+    current_team_id INT REFERENCES Teams(team_id)
+);
+CREATE TABLE Player_History(
+    player_id INT REFERENCES Players(player_id),
+    start_date DATE,
+    end_date DATE,
+    position VARCHAR(20),
+    jersey_number INT,
+);
+CREATE TABLE Game_Stats(
+    game_id INT REFERENCES Games(game_id),
+    player_id INT REFERENCES Players(player_id),
+    goals INT DEFAULT 0,
+    assists INT DEFAULT 0,
+    pims INT DEFAULT 0,
+    plus_minus INT DEFAULT 0,
+    PRIMARY KEY (game_id, player_id)
+);
+CREATE TABLE Played_in(
+    team_id INT REFERENCES Teams(team_id),
+    season_year_start INT REFERENCES Seasons(season_year_start)
+)
