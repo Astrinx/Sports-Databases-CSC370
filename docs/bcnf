@@ -1,0 +1,35 @@
+Teams(team_id, name, abbreviation, city, arena_name)
+    FD's:
+team_id -> name, abbreviation, city, arena_name
+name -> team_id, abbreviation, city, arena_name
+abbreviation -> team_id, name, city, arena_name
+
+All three on the left (determinants) could be used as keys 
+
+Seasons(season_year_start, season_start_date, winning_team)
+    FD's:
+season_year_start -> season_start_date, winning_team
+Only the key determines any of the other columns, BCNF
+
+Players(player_id, first_name, last_name, nickname, birth_date, height, weight, nationality, draft_year, draft_round, draft_pick, current_team_id)
+    FD's:
+player_id -> first_name, last_name, nickname, birth_date, height, weight, nationality, draft_year, draft_round, draft_pick, current_team_id
+Only the key determines any of the other columns, BCNF
+
+Played_in(team_id, season_year_start)
+    No FD's as both colomns are keys
+
+Games(game_id, game_date, home_score, away_score, home_team_id, away_team_id, season_year_start)
+    FD's:
+game_id -> game_date, home_score, away_score, home_team_id, away_team_id, season_year_start
+Only the key determines any of the other columns, BCNF
+
+Player_History(player_id, start_date, end_date, team_id, position, jersey_number)
+    FD's:
+player_id, start_date -> end_date, team_id, position, jersey_number
+Only the combination of keys determines any of the other columns, BCNF
+
+Game_Stats(game_id, player_id, goals, assists, pims, plus_minus)
+    FD's:
+game_id, player_id -> goals, assists, pims, plus_minus
+Only the combination of keys determines any of the other columns, BCNF
