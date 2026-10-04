@@ -1,4 +1,4 @@
--- This schema is for a hockey database that tracks teams, seasons, games, players, and their statistics
+-- This schema is for a hockey database that tracks teams, seasons, games, players, and their statistics.
 
 -- This table stores information about the teams in the league, including their name, abbreviation, city, and arena name.
 CREATE TABLE Teams(
@@ -22,10 +22,13 @@ CREATE TABLE Games(
     game_date DATE,
     home_score INT,
     away_score INT,
-    home_team_id INT REFERENCES Teams(team_id) NOT NULL, -- Can't be null because every game must have a home team
-    away_team_id INT REFERENCES Teams(team_id) NOT NULL, -- Can't be null because every game must have an away team
-    season_year_start INT NOT NULL REFERENCES Seasons(season_year_start),
-    CHECK (home_team_id <> away_team_id)                 -- Can't be the same team for home and away
+    home_team_id INT NOT NULL,        -- Can't be null because every game must have a home team
+    away_team_id INT NOT NULL,        -- Can't be null because every game must have an away team
+    season_year_start INT NOT NULL,
+    FOREIGN KEY (home_team_id) REFERENCES Teams(team_id),
+    FOREIGN KEY (away_team_id) REFERENCES Teams(team_id),
+    FOREIGN KEY (season_year_start) REFERENCES Seasons(season_year_start),
+    CHECK (home_team_id <> away_team_id)  -- Can't be the same team for home and away
 );
 
 -- This table stores information about the players in the league, including their name, nickname, birth date, height, weight, nationality, draft information, and the team they currently play for.
