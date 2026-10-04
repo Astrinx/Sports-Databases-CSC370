@@ -1,4 +1,4 @@
--- This schema is for a hockey database that tracks teams, seasons, games, players, and their statistics.
+-- This schema is for a hockey database that tracks teams, seasons, games, players, and their statistics
 
 -- This table stores information about the teams in the league, including their name, abbreviation, city, and arena name.
 CREATE TABLE Teams(

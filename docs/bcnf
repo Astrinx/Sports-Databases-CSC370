@@ -27,7 +27,7 @@ Only the key determines any of the other columns, BCNF
 Player_History(player_id, start_date, end_date, team_id, position, jersey_number)
     FD's:
 player_id, start_date -> end_date, team_id, position, jersey_number
-Only the combination of keys determines any of the other columns, BCNF
+Only the combination of keys determines any of the other columns, BCNF.
 
 Game_Stats(game_id, player_id, goals, assists, pims, plus_minus)
     FD's:
