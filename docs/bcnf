@@ -16,6 +16,16 @@ Players(player_id, first_name, last_name, nickname, birth_date, height, weight, 
 player_id -> first_name, last_name, nickname, birth_date, height, weight, nationality, draft_year, draft_round, draft_pick, current_team_id
 Only the key determines any of the other columns, BCNF
 
+Skaters(player_id, position, shoots)
+    FD's:
+player_id -> position, shoots
+Only the key determines any of the other columns, BCNF
+
+Goalies(player_id, catches)
+    FD's:
+player_id -> catches
+Only the key determines any of the other columns, BCNF
+
 Played_in(team_id, season_year_start)
     No FD's as both colomns are keys
 
@@ -29,7 +39,12 @@ Player_History(player_id, start_date, end_date, team_id, position, jersey_number
 player_id, start_date -> end_date, team_id, position, jersey_number
 Only the combination of keys determines any of the other columns, BCNF.
 
-Game_Stats(game_id, player_id, goals, assists, pims, plus_minus)
+Skater_Stats(game_id, player_id, goals, assists, pim, plus_minus)
     FD's:
-game_id, player_id -> goals, assists, pims, plus_minus
+game_id, player_id -> goals, assists, pim, plus_minus
+Only the combination of keys determines any of the other columns, BCNF
+
+Goalie_Stats(game_id, player_id, shots_against, saves, goals_against, win)
+    FD's:
+game_id, player_id -> shots_against, saves, goals_against, win
 Only the combination of keys determines any of the other columns, BCNF
