@@ -49,7 +49,7 @@ CREATE TABLE Players(
 
 -- Adding skater and goalie subsets
 -- Subset 1: Skaters
-CREATE_TABLE Skaters (
+CREATE TABLE Skaters (
     player_id INT PRIMARY KEY,
     position VARCHAR(5) NOT NULL,       -- ('C') for center, ('LW') for left wing, ('RW') for right wing, ('D') for defence       
     Shoots Char(1),                     -- ('L') for left, ('R') for right
@@ -59,7 +59,7 @@ CREATE_TABLE Skaters (
 )
 
 -- Subset 2: Goalies
-CREATE_TABLE Goalies (
+CREATE TABLE Goalies (
     player_id INT PRIMARY KEY,
     catches CHAR (1),                   -- ('L') for left, ('R') for right
     FOREIGN KEY (player_id) REFERENCES Players(player_id),
@@ -95,7 +95,7 @@ CREATE TABLE Player_History(
 
 
 -- Relationship with attributes: Skaters stats
-CREATE_TABLE Skater_Stats (
+CREATE TABLE Skater_Stats (
     game_id INT NOT NULL
     player_id INT NOT NULL
     goals INT DEFAULT 0,
@@ -108,7 +108,7 @@ CREATE_TABLE Skater_Stats (
 )
 
 -- Relationship with attributes: Goalie stats
-CREATE_TABLE Skater_Stats (
+CREATE TABLE Skater_Stats (
     game_id INT NOT NULL
     player_id INT NOT NULL
     shots_against INT DEFAULT 0,
