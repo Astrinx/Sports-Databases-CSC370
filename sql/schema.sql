@@ -1,7 +1,12 @@
 -- =============================================================
--- NHL Database: schema (Sprint 1 draft, matches ERD of Oct 20)
+-- NHL Database: schema 
 -- =============================================================
 
+-- Drop old tables so this script can be re-run from scratch (otherwise CREATE TABLE fails with 'table already exists' error).
+-- Order matters; tables with foreign keys are dropped before the tables they reference.
+
+
+DROP TABLE IF EXISTS Played_In;
 DROP TABLE IF EXISTS Goalie_Game_Stats;
 DROP TABLE IF EXISTS Skater_Game_Stats;
 DROP TABLE IF EXISTS Games;
@@ -21,7 +26,7 @@ CREATE TABLE Arenas (
   arena_name  VARCHAR(80)  NOT NULL,
   city        VARCHAR(50)  NOT NULL,
   PRIMARY KEY (arena_name)
-);
+ );
 
 -- -------------------------------------------------------------
 -- Strong entity: Teams
@@ -34,6 +39,7 @@ CREATE TABLE Teams (
   arena_name    VARCHAR(80)  NULL,          -- plays_at (at most one arena)
   PRIMARY KEY (team_id),
   UNIQUE (abbreviation),                    -- second candidate key
+  UNIQUE (name),                            -- third candidate key
   FOREIGN KEY (arena_name) REFERENCES Arenas(arena_name)
 );
 
@@ -46,9 +52,9 @@ CREATE TABLE Seasons (
   season_year_start  INT   NOT NULL,
   season_start_date  DATE  NOT NULL,
   end_year           INT   GENERATED ALWAYS AS (season_year_start + 1) VIRTUAL,
-  winner_team_id     INT   NULL,              -- NULL until the season ends
+  winning_team_id     INT   NULL,              -- NULL until the season ends
   PRIMARY KEY (season_year_start),
-  FOREIGN KEY (winner_team_id) REFERENCES Teams(team_id)
+  FOREIGN KEY (winning_team_id) REFERENCES Teams(team_id)
 );
 
 -- -------------------------------------------------------------
@@ -122,8 +128,8 @@ CREATE TABLE Games (
   game_date          DATE  NOT NULL,
   home_team_id       INT   NOT NULL,
   away_team_id       INT   NOT NULL,
-  home_score         TINYINT,                 -- NULL = not played yet
-  away_score         TINYINT,
+  home_score         INT,                 -- NULL = not played yet
+  away_score         INT,
   season_year_start  INT   NOT NULL,
   PRIMARY KEY (game_id),
   UNIQUE (home_team_id, game_date),           -- a team hosts <= 1 game per day
@@ -163,7 +169,7 @@ CREATE TABLE Goalie_Game_Stats (
   game_id        INT       NOT NULL,
   shots_against  SMALLINT  NOT NULL DEFAULT 0,
   saves          SMALLINT  NOT NULL DEFAULT 0,
-  decision       ENUM('W','L','OTL') NULL,    -- NULL = no decision
+  decision       ENUM('W','L','OTL') NULL,    -- NULL = played but not the goalie of record
   goals_against  SMALLINT  GENERATED ALWAYS AS (shots_against - saves) VIRTUAL,
   save_pct       DECIMAL(4,3) GENERATED ALWAYS AS
                    (CASE WHEN shots_against = 0 THEN NULL

@@ -8,7 +8,6 @@ and the players on those teams, including their per-game stats.
 | `docs/ERD.png` | Entity Relationship Diagram |
 | `docs/bcnf` | BCNF analysis |
 | `sql/schema.sql` | SQL DDL (MySQL 8.0.16+) |
-| `sql/dml.sql` | Inserts and deletes (to do) |
 | `CHANGELOG.md` | Every design change and why |
 
 ## How to run
@@ -27,7 +26,7 @@ mysql -u <user> -p <database> < sql/schema.sql
 - Check the ERD against the eight design criteria
 - Compare our design in 3NF and 4NF
 - Re-evaluate our weak entities
-- Insert and delete data based on query predicates (SQL DML)
+~~- Insert and delete data based on query predicates (SQL DML)~~ (moved to Sprint 2 goals)
 
 ---
 
@@ -53,8 +52,8 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 | Table | FDs |
 |-------|-----|
 | Arenas | arena_name → city |
-| Teams | team_id → name, abbreviation, arena_name ; abbreviation → team_id |
-| Seasons | season_year_start → season_start_date, winner_team_id |
+| Teams | team_id → name, abbreviation, arena_name ; abbreviation → team_id ; name → team_id |
+| Seasons | season_year_start → season_start_date, winning_team_id |
 | Players | player_id → all ; (draft_year, draft_round, draft_pick) → player_id |
 | Skaters | player_id → position, shoots |
 | Goalies | player_id → catches |
@@ -73,11 +72,9 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 - A game's date falls inside its season.
 - home_team_id ≠ away_team_id (CHECK in schema.sql).
 
-## 5. SQL DML
-To do: `sql/dml.sql` with sample inserts and deletes based on query predicates.
-
 ---
 
 ## Next sprint
 - Add game_type (regular / playoff) to Games
 - Write queries over the stats
+- Insert and delete data based on query predicates (SQL DML)
