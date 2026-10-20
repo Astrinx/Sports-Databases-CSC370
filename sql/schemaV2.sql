@@ -1,8 +1,5 @@
 -- =============================================================
--- NHL Database: schema (Sprint 2 draft, matches ERD of Oct 20)
--- MySQL 8.0.16+ (CHECK constraints are enforced from 8.0.16 on)
--- FKs are declared at TABLE level: MySQL ignores inline
--- "col INT REFERENCES T(id)" clauses.
+-- NHL Database: schema (Sprint 1 draft, matches ERD of Oct 20)
 -- =============================================================
 
 DROP TABLE IF EXISTS Goalie_Game_Stats;
