@@ -1,128 +1,175 @@
--- This schema is for a hockey database that tracks teams, seasons, games, players, and their statistics.
+-- =============================================================
+-- NHL Database: schema (Sprint 1 draft, matches ERD of Oct 20)
+-- =============================================================
 
--- This table stores information about the teams in the league, including their name, abbreviation, city, and arena name.
-CREATE TABLE Teams(
-    team_id INT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE, -- NOT NULL and UNIQUE to avoid duplicate team names
-    abbreviation CHAR(3) NOT NULL UNIQUE, -- NOT NULL and UNIQUE to avoid duplicate abbreviations
-    city VARCHAR(50),
-    arena_name VARCHAR(50)
+DROP TABLE IF EXISTS Goalie_Game_Stats;
+DROP TABLE IF EXISTS Skater_Game_Stats;
+DROP TABLE IF EXISTS Games;
+DROP TABLE IF EXISTS Player_History;
+DROP TABLE IF EXISTS Goalies;
+DROP TABLE IF EXISTS Skaters;
+DROP TABLE IF EXISTS Players;
+DROP TABLE IF EXISTS Seasons;
+DROP TABLE IF EXISTS Teams;
+DROP TABLE IF EXISTS Arenas;
+
+-- -------------------------------------------------------------
+-- Strong entity: Arenas (new). Split out of Teams because
+-- arena_name -> city was a non-key FD inside Teams (Normality).
+-- -------------------------------------------------------------
+CREATE TABLE Arenas (
+  arena_name  VARCHAR(80)  NOT NULL,
+  city        VARCHAR(50)  NOT NULL,
+  PRIMARY KEY (arena_name)
 );
 
--- This table stores information about the seasons in the league, including the year the season started, the start date of the season, and the team that won the Presidents' Trophy for that season.
-CREATE TABLE Seasons(
-    season_year_start INT PRIMARY KEY,
-    season_start_date DATE,
-    winning_team INT NULL REFERENCES Teams(team_id) -- NULL until the season is decided
+-- -------------------------------------------------------------
+-- Strong entity: Teams
+-- plays_at: many-one Teams -> Arenas (city now lives on Arenas)
+-- -------------------------------------------------------------
+CREATE TABLE Teams (
+  team_id       INT          NOT NULL,
+  name          VARCHAR(50)  NOT NULL,
+  abbreviation  CHAR(3)      NOT NULL,
+  arena_name    VARCHAR(80)  NULL,          -- plays_at (at most one arena)
+  PRIMARY KEY (team_id),
+  UNIQUE (abbreviation),                    -- second candidate key
+  FOREIGN KEY (arena_name) REFERENCES Arenas(arena_name)
 );
 
--- This table stores information about the games played in the league, including the date of the game, the scores for the home and away teams, and references to the teams that played in the game and the season in which the game was played.
-CREATE TABLE Games(
-    game_id INT PRIMARY KEY,
-    game_date DATE,
-    home_score INT,
-    away_score INT,
-    home_team_id INT NOT NULL,        -- Can't be null because every game must have a home team
-    away_team_id INT NOT NULL,        -- Can't be null because every game must have an away team
-    season_year_start INT NOT NULL,
-    FOREIGN KEY (home_team_id) REFERENCES Teams(team_id),
-    FOREIGN KEY (away_team_id) REFERENCES Teams(team_id),
-    FOREIGN KEY (season_year_start) REFERENCES Seasons(season_year_start),
-    CHECK (home_team_id <> away_team_id)  -- Can't be the same team for home and away
+-- -------------------------------------------------------------
+-- Strong entity: Seasons
+-- winner: many-one Seasons -> Teams (each season has <= 1 winner)
+-- end_year is derived (dashed in ERD) -> generated column, not stored
+-- -------------------------------------------------------------
+CREATE TABLE Seasons (
+  season_year_start  INT   NOT NULL,
+  season_start_date  DATE  NOT NULL,
+  end_year           INT   GENERATED ALWAYS AS (season_year_start + 1) VIRTUAL,
+  winner_team_id     INT   NULL,              -- NULL until the season ends
+  PRIMARY KEY (season_year_start),
+  FOREIGN KEY (winner_team_id) REFERENCES Teams(team_id)
 );
 
--- This table stores information about the players in the league, including their name, nickname, birth date, height, weight, nationality, draft information, and the team they currently play for.
-CREATE TABLE Players(
-    player_id INT PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,     -- Last and first name cannot be null
-    nickname VARCHAR(50),
-    birth_date DATE,
-    height INT,
-    weight INT,
-    nationality VARCHAR(50),
-    draft_year INT,
-    draft_round INT,
-    draft_pick INT,
-    current_team_id INT REFERENCES Teams(team_id) -- NULL if the player is a free agent
+-- -------------------------------------------------------------
+-- Strong entity: Players
+-- name, physical, draft are composite attributes -> flattened
+-- age is derived from birth_date -> not stored (compute in queries)
+-- current team = the Player_History row with end_date IS NULL
+-- -------------------------------------------------------------
+CREATE TABLE Players (
+  player_id        INT          NOT NULL,
+  first_name       VARCHAR(40)  NOT NULL,
+  last_name        VARCHAR(40)  NOT NULL,
+  nickname         VARCHAR(40),
+  height_cm        SMALLINT,
+  weight_kg        SMALLINT,
+  nationality      VARCHAR(40),
+  birth_date       DATE,
+  draft_year       SMALLINT,                  -- NULL = undrafted
+  draft_round      TINYINT,
+  draft_pick       SMALLINT,
+  PRIMARY KEY (player_id),
+  UNIQUE (draft_year, draft_round, draft_pick),   -- second key (NULLs allowed)
+  CHECK (height_cm IS NULL OR height_cm > 0),
+  CHECK (weight_kg IS NULL OR weight_kg > 0)
 );
 
--- Adding skater and goalie subsets
--- Subset 1: Skaters
+-- -------------------------------------------------------------
+-- Subsets of Players (isa): PK is also the FK to the parent
+-- -------------------------------------------------------------
 CREATE TABLE Skaters (
-    player_id INT PRIMARY KEY,
-    position VARCHAR(5) NOT NULL,       -- ('C') for center, ('LW') for left wing, ('RW') for right wing, ('D') for defence       
-    Shoots Char(1),                     -- ('L') for left, ('R') for right
-    FOREIGN KEY (player_id) REFENCES Players(player_id),
-    CHECK (position in ('C', 'LW', 'RW', 'D')),
-    CHECK (shoots in ('L', 'R'))
-)
-
--- Subset 2: Goalies
-CREATE TABLE Goalies (
-    player_id INT PRIMARY KEY,
-    catches CHAR (1),                   -- ('L') for left, ('R') for right
-    FOREIGN KEY (player_id) REFERENCES Players(player_id),
-    CHECK (catcehs IN ('L', 'R'))
-)
-
--- This table stores information about the history of players in the league, including the teams they have played for, the dates they played for those teams, their position, and their jersey number.
-CREATE TABLE Player_History(
-    player_id INT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE,
-    team_id INT NOT NULL, 
-    jersey_number INT,
-    -- position VARCHAR(20), -> moved to their own entities as player subsets
-    PRIMARY KEY (player_id, start_date)
-    FOREIGN KEY (player_id) REFERENCES Players(player_id)
-    FOREIGN KEY (team_id) REFERENCES Players(player_id)
+  player_id  INT      NOT NULL,
+  position   ENUM('C','LW','RW','D') NOT NULL,
+  shoots     ENUM('L','R'),
+  PRIMARY KEY (player_id),
+  FOREIGN KEY (player_id) REFERENCES Players(player_id)
 );
 
--- -- This table stores information about the statistics of players in the league, including the number of goals, assists, penalty minutes, and plus/minus rating for each player in each game they played.
--- CREATE TABLE Game_Stats(
---     game_id INT NOT NULL REFERENCES Games(game_id),
---     player_id INT NOT NULL REFERENCES Players(player_id),
---     goals INT DEFAULT 0,
---     assists INT DEFAULT 0,
---     pims INT DEFAULT 0,
---     plus_minus INT DEFAULT 0,
---     PRIMARY KEY (game_id, player_id)
--- );
+CREATE TABLE Goalies (
+  player_id  INT      NOT NULL,
+  catches    ENUM('L','R'),
+  PRIMARY KEY (player_id),
+  FOREIGN KEY (player_id) REFERENCES Players(player_id)
+);
 
--- Create two new tables for the many-to-many relationships between player subsets and games played
--- The Tables are relationships with attributes recording players stats from games played in
+-- -------------------------------------------------------------
+-- Weak entity: Player_History
+-- Supported by Has (-> Players) AND stint_with (-> Teams), both
+-- double diamonds, so its key = player_id + team_id + start_date
+-- -------------------------------------------------------------
+CREATE TABLE Player_History (
+  player_id      INT      NOT NULL,
+  team_id        INT      NOT NULL,
+  start_date     DATE     NOT NULL,           -- partial key
+  end_date       DATE     NULL,               -- NULL = current stint
+  jersey_number  TINYINT,
+  PRIMARY KEY (player_id, team_id, start_date),
+  FOREIGN KEY (player_id) REFERENCES Players(player_id),
+  FOREIGN KEY (team_id)   REFERENCES Teams(team_id),
+  CHECK (end_date IS NULL OR end_date >= start_date),
+  CHECK (jersey_number IS NULL OR jersey_number BETWEEN 0 AND 99)
+);
 
+-- -------------------------------------------------------------
+-- Strong entity: Games
+-- Hosts / Visits: two many-one relationships to Teams (two roles)
+-- made_of: many-one Games -> Seasons
+-- Score is a composite attribute -> home_score, away_score
+-- -------------------------------------------------------------
+CREATE TABLE Games (
+  game_id            INT   NOT NULL,
+  game_date          DATE  NOT NULL,
+  home_team_id       INT   NOT NULL,
+  away_team_id       INT   NOT NULL,
+  home_score         TINYINT,                 -- NULL = not played yet
+  away_score         TINYINT,
+  season_year_start  INT   NOT NULL,
+  PRIMARY KEY (game_id),
+  UNIQUE (home_team_id, game_date),           -- a team hosts <= 1 game per day
+  UNIQUE (away_team_id, game_date),           -- a team visits <= 1 game per day
+  FOREIGN KEY (home_team_id)      REFERENCES Teams(team_id),
+  FOREIGN KEY (away_team_id)      REFERENCES Teams(team_id),
+  FOREIGN KEY (season_year_start) REFERENCES Seasons(season_year_start),
+  CHECK (home_team_id <> away_team_id),
+  CHECK (home_score IS NULL OR home_score >= 0),
+  CHECK (away_score IS NULL OR away_score >= 0)
+);
 
--- Relationship with attributes: Skaters stats
-CREATE TABLE Skater_Stats (
-    game_id INT NOT NULL
-    player_id INT NOT NULL
-    goals INT DEFAULT 0,
-    assists INT DEFAULT 0, 
-    pim INT DEFAULT 0, 
-    plus_minus INT DEFAULT 0, 
-    PRIMARY KEY (game_id, player_id),
-    FOREIGN KEY (game_id) REFERENCES games(game_id),
-    FOREIGN KEY (player_id) REFERENCES Skaters(player_id)
-)
+-- -------------------------------------------------------------
+-- Many-many: Records Skater Stats (Skaters x Games)
+-- -------------------------------------------------------------
+CREATE TABLE Skater_Game_Stats (
+  player_id   INT      NOT NULL,
+  game_id     INT      NOT NULL,
+  goals       TINYINT  NOT NULL DEFAULT 0,
+  assists     TINYINT  NOT NULL DEFAULT 0,
+  plus_minus  TINYINT  NOT NULL DEFAULT 0,    -- can be negative
+  pim         SMALLINT NOT NULL DEFAULT 0,    -- penalty minutes
+  PRIMARY KEY (player_id, game_id),
+  FOREIGN KEY (player_id) REFERENCES Skaters(player_id),
+  FOREIGN KEY (game_id)   REFERENCES Games(game_id),
+  CHECK (goals >= 0 AND assists >= 0 AND pim >= 0)
+);
 
--- Relationship with attributes: Goalie stats
-CREATE TABLE Skater_Stats (
-    game_id INT NOT NULL
-    player_id INT NOT NULL
-    shots_against INT DEFAULT 0,
-    saves INT DEFAULT 0, 
-    goals_against INT DEFAULT 0, 
-    wins INT DEFAULT 0, 
-    PRIMARY KEY (game_id, player_id),
-    FOREIGN KEY (game_id) REFERENCES games(game_id),
-    FOREIGN KEY (player_id) REFERENCES Skaters(player_id)
-)
-
--- This table stores information about the teams that played in each season, including the team ID and the season year start.
-CREATE TABLE Played_in(
-    team_id INT NOT NULL REFERENCES Teams(team_id),
-    season_year_start INT NOT NULL REFERENCES Seasons(season_year_start),
-    PRIMARY KEY (team_id, season_year_start)
+-- -------------------------------------------------------------
+-- Many-many: Records Goalie Stats (Goalies x Games)
+-- goals_against and save_pct are derived (dashed) -> generated
+-- decision (Win/Loss on the ERD) is stored: deriving it would need
+-- the goalie's team, which the stats row doesn't have
+-- -------------------------------------------------------------
+CREATE TABLE Goalie_Game_Stats (
+  player_id      INT       NOT NULL,
+  game_id        INT       NOT NULL,
+  shots_against  SMALLINT  NOT NULL DEFAULT 0,
+  saves          SMALLINT  NOT NULL DEFAULT 0,
+  decision       ENUM('W','L','OTL') NULL,    -- NULL = no decision
+  goals_against  SMALLINT  GENERATED ALWAYS AS (shots_against - saves) VIRTUAL,
+  save_pct       DECIMAL(4,3) GENERATED ALWAYS AS
+                   (CASE WHEN shots_against = 0 THEN NULL
+                         ELSE saves / shots_against END) VIRTUAL,
+  PRIMARY KEY (player_id, game_id),
+  FOREIGN KEY (player_id) REFERENCES Goalies(player_id),
+  FOREIGN KEY (game_id)   REFERENCES Games(game_id),
+  CHECK (saves >= 0 AND shots_against >= 0 AND saves <= shots_against)
 );
