@@ -115,6 +115,7 @@ CREATE TABLE Player_History (
   FOREIGN KEY (team_id)   REFERENCES Teams(team_id),
   CHECK (end_date IS NULL OR end_date >= start_date),
   CHECK (jersey_number IS NULL OR jersey_number BETWEEN 0 AND 99)
+  CHECK (jersey_number <> 99 OR start_date <= '2000-02-06')       --No player can wear #99 after Greztky's number is retired
 );
 
 -- -------------------------------------------------------------

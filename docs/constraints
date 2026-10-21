@@ -1,0 +1,112 @@
+===================================================================
+RELATIONAL ALGEBRA CONSTRAINTS
+===================================================================
+
+1. VALUE RANGE CONSTRAINTS
+-------------------------------------------------------------------
+Rule 1a: No NHL season started prior to the league's founding in 1917.
+R.A.: σ_{season_year_start < 1917}(Seasons) = ∅
+
+Rule 1b: Skater positions must only be Center, Left Wing, Right Wing, or Defense.
+R.A.: σ_{position ∉ {'C', 'LW', 'RW', 'D'}}(Skaters) = ∅
+
+Rule 1c: Game stats (goals, assists, pim) cannot be negative.
+R.A.: σ_{goals < 0 ∨ assists < 0 ∨ pim < 0}(Skater_Stats) = ∅
+
+Rule 1d (Gretzky Rule): Jersey #99 was retired league-wide on Feb 6, 2000; 
+no stint starting after that date can use jersey #99.
+R.A.: σ_{jersey_number = 99 ∧ start_date > '2000-02-06'}(Player_History) = ∅
+
+
+2. ATTRIBUTE RELATIONSHIP CONSTRAINTS
+-------------------------------------------------------------------
+Rule 2a: No team can play against itself in a game.
+R.A.: σ_{home_team_id = away_team_id}(Games) = ∅
+
+Rule 2b: A goalie cannot record more saves than shots against in a game.
+R.A.: σ_{saves > shots_against}(Goalie_Stats) = ∅
+
+Rule 2c: A player history stint cannot end before it starts.
+R.A.: σ_{end_date < start_date}(Player_History) = ∅
+
+
+3. CROSS-TABLE JOIN CONSTRAINTS
+-------------------------------------------------------------------
+Rule 3a: A skater cannot record stats in a game unless they 
+had an active stint in Player_History during that game_date 
+for either the home or away team.
+R.A.: 
+π_{game_id, player_id}(Skater_Stats) ⊆ 
+π_{game_id, player_id}(
+    σ_{game_date ≥ start_date ∧ (end_date = NULL ∨ game_date ≤ end_date) ∧ (team_id = home_team_id ∨ team_id = away_team_id)}(
+        Player_History ⋈ Games
+    )
+)
+
+Rule 3b (Game Date vs. Season Start Date): No game can be played before 
+its season's start date.
+R.A.: σ_{game_date < season_start_date}(Games ⋈ Seasons) = ∅
+
+Rule 3c: A player cannot start 
+a team stint before they were born.
+R.A.: σ_{start_date < birth_date}(Players ⋈ Player_History) = ∅
+
+Rule 3d: No player can be both a Skater and a Goalie.
+R.A.: Skaters ⋈ Goalies = ∅
+
+
+4. SELF-JOIN CONSTRAINTS
+-------------------------------------------------------------------
+Rule 4a: A player cannot have two different active stints (end_date IS NULL) 
+at the same time.
+R.A.: σ_{ph1.end_date = NULL ∧ ph2.end_date = NULL}(
+          ρ_{ph1}(Player_History) 
+          ⋈_{ph1.player_id = ph2.player_id ∧ ph1.start_date ≠ ph2.start_date} 
+          ρ_{ph2}(Player_History)
+      ) = ∅
+
+
+5. KEY / UNIQUENESS CONSTRAINTS
+-------------------------------------------------------------------
+Rule 5a: Every team name and abbreviation must be unique across distinct teams.
+R.A.: σ_{t1.name = t2.name ∨ t1.abbreviation = t2.abbreviation}(
+          ρ_{t1}(Teams) ⋈_{t1.team_id ≠ t2.team_id} ρ_{t2}(Teams)
+      ) = ∅
+
+
+6. REFERENTIAL INTEGRITY CONSTRAINTS
+-------------------------------------------------------------------
+Rule 6a: Every home team and away team in Games must exist in Teams.
+R.A.: π_{home_team_id}(Games) ⊆ π_{team_id}(Teams)
+      π_{away_team_id}(Games) ⊆ π_{team_id}(Teams)
+
+Rule 6b: Every Skater and Goalie must exist in the parent Players relation, 
+and stats can only be logged by their respective subset.
+R.A.: π_{player_id}(Skaters) ⊆ π_{player_id}(Players)
+      π_{player_id}(Goalies) ⊆ π_{player_id}(Players)
+      π_{player_id}(Skater_Stats) ⊆ π_{player_id}(Skaters)
+      π_{player_id}(Goalie_Stats) ⊆ π_{player_id}(Goalies)
+
+Rule 6c: Every team's arena must exist in the Arena relation.
+R.A.: π_{arena_name}(Teams) ⊆ π_{arena_name}(Arena)
+
+Rule 6d: A season's winning_team must have actually played a game in that season.
+R.A.: π_{season_year_start, winning_team}(σ_{winning_team ≠ NULL}(Seasons)) ⊆ 
+      π_{season_year_start, home_team_id}(Games) ∪ π_{season_year_start, away_team_id}(Games)
+
+
+7. FUNCTIONAL DEPENDENCY CONSTRAINTS
+-------------------------------------------------------------------
+Rule 7a: Expressing arena_name → city in Arena.
+If two tuples agree on arena_name, they cannot disagree on city.
+R.A.: σ_{a1.city ≠ a2.city}(
+          ρ_{a1}(Arena) ⋈_{a1.arena_name = a2.arena_name} ρ_{a2}(Arena)
+      ) = ∅
+
+Rule 7b: Expressing 
+home_team_id → name across Games and Teams.
+R.A.: σ_{t1.name ≠ t2.name}(
+          (ρ_{g1}(Games) ⋈_{g1.home_team_id = t1.team_id} ρ_{t1}(Teams))
+          ⋈_{g1.home_team_id = g2.home_team_id}
+          (ρ_{g2}(Games) ⋈_{g2.home_team_id = t2.team_id} ρ_{t2}(Teams))
+      ) = ∅
