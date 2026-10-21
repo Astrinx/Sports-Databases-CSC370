@@ -7,6 +7,7 @@ and the players on those teams, including their per-game stats.
 |------|------------|
 | `docs/ERD.png` | Entity Relationship Diagram |
 | `docs/bcnf` | BCNF analysis |
+| `docs/constraints` | Relational Algebra Constraint rule list |
 | `sql/schema.sql` | SQL DDL (MySQL 8.0.16+) |
 | `CHANGELOG.md` | Every design change and why |
 
