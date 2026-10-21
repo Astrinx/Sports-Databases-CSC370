@@ -66,11 +66,7 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 - **4NF:** no multivalued dependencies, because each player has one nationality and one position. If we later allow several, those move to their own tables (e.g. Player_Nationality).
 
 ## 4. Constraints the ERD can't show
-- A player can't be both a Skater and a Goalie.
-- A player's stints can't overlap.
-- A player with stats in a game must have been on one of its two teams that day.
-- A game's date falls inside its season.
-- home_team_id ≠ away_team_id (CHECK in schema.sql).
+ - See docs/constraints for full list
 
 ---
 

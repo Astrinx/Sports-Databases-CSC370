@@ -6,7 +6,6 @@
 - Removed plays_for (duplicate: current team = Player_history row with no end_date)
 - Removed played_in (duplicate: teams in a season can be found from Games)
 - Added Arena (arena_name, City) with Plays_at; moved City off Teams (city depends on arena, not team)
-- Removed made_of to Seasons
 
 ## Schema
 - Added Arenas table
@@ -16,3 +15,4 @@
 - Seasons: renamed winner_team_id to winning_team_id
 - Goalie_Game_Stats: decision is NULL when a goalie played but wasn't the goalie of record
 - Added DROP TABLE lines so the script can be re-run from scratch
+- Added Constraint on jersey #99
