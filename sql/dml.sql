@@ -1,5 +1,5 @@
 -- =============================================================
--- NHL Database: ddl (run after schema.sql)
+-- NHL Database: dml (run after schema.sql)
 -- Sample data: names are real, stats are made up.
 -- =============================================================
 
@@ -38,11 +38,16 @@ INSERT INTO Player_History (player_id, team_id, start_date) VALUES
   (5, 2, '2019-10-01'),
   (6, 3, '2016-10-01');
 
+INSERT INTO Game_Days (game_date, season_year_start) VALUES
+  ('2024-10-10', 2024),
+  ('2024-10-12', 2024),
+  ('2024-10-14', 2024);
+
 -- Game 3 has not been played yet (scores are NULL)
-INSERT INTO Games (game_id, game_date, home_team_id, away_team_id, home_score, away_score, season_year_start) VALUES
-  (1, '2024-10-10', 1, 2, 3, 2, 2024),
-  (2, '2024-10-12', 2, 3, 4, 1, 2024),
-  (3, '2024-10-14', 3, 1, NULL, NULL, 2024);
+INSERT INTO Games (game_id, game_date, home_team_id, away_team_id, home_score, away_score) VALUES
+  (1, '2024-10-10', 1, 2, 3, 2),
+  (2, '2024-10-12', 2, 3, 4, 1),
+  (3, '2024-10-14', 3, 1, NULL, NULL);
 
 INSERT INTO Skater_Game_Stats (player_id, game_id, goals, assists, plus_minus, pim) VALUES
   (1, 1, 1, 1,  1, 0),

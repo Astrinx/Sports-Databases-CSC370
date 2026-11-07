@@ -45,7 +45,7 @@ R.A.:
 
 Rule 3b (Game Date vs. Season Start Date): No game can be played before 
 its season's start date.
-R.A.: σ_{game_date < season_start_date}(Games ⋈ Seasons) = ∅
+R.A.: σ_{game_date < season_start_date}(Games ⋈ Game_Days ⋈ Seasons) = ∅
 
 Rule 3c: A player cannot start 
 a team stint before they were born.
@@ -91,9 +91,13 @@ Rule 6c: Every team's arena must exist in the Arena relation.
 R.A.: π_{arena_name}(Teams) ⊆ π_{arena_name}(Arena)
 
 Rule 6d: A season's winning_team must have actually played a game in that season.
-R.A.: π_{season_year_start, winning_team}(σ_{winning_team ≠ NULL}(Seasons)) ⊆ 
-      π_{season_year_start, home_team_id}(Games) ∪ π_{season_year_start, away_team_id}(Games)
+R.A.: π_{season_year_start, home_team_id}(Games ⋈ Game_Days) ∪
+      π_{season_year_start, away_team_id}(Games ⋈ Game_Days)
 
+Rule 6e: Every game must be played on a date that exists in Game_Days, and every
+Game_Days date must belong to a season that exists in Seasons.
+R.A.: π_{game_date}(Games) ⊆ π_{game_date}(Game_Days)
+      π_{season_year_start}(Game_Days) ⊆ π_{season_year_start}(Seasons)
 
 7. FUNCTIONAL DEPENDENCY CONSTRAINTS
 -------------------------------------------------------------------

@@ -32,7 +32,12 @@ Goalies(player_id, catches)
 player_id -> catches
 Only the key determines any of the other columns, BCNF
 
-Games(game_id, game_date, home_team_id, away_team_id, home_score, away_score, season_year_start)
+Game_Days(game_date, season_year_start)
+    FD's:
+game_date -> season_year_start
+Only the key determines any of the other columns, BCNF
+
+Games(game_id, game_date, home_team_id, away_team_id, home_score, away_score, game_type)
     FD's:
 game_id -> all other columns
 (home_team_id, game_date) -> game_id, and so all other columns

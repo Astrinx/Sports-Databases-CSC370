@@ -41,7 +41,7 @@ mysql -u <user> -p <database> < sql/schema.sql
 | Readability | Consistent notation; derived = dashed, composite = yellow |
 | Self-explanation | Relationship names read as sentences (Teams plays_at Arena) |
 | Extensibility | New player types or stats can be added as new subsets or relationships |
-| Normality | Arena split out of Teams because arena_name → city (see section 3) |
+| Normality | Arena split out of Teams because arena_name → city; Game_Days split out of Games because game_date → season_year_start (see section 3) |
 
 ## 2. Weak entities
 - **Stats (changed):** were weak entities, now many–many relationships between Skaters/Goalies and Games. A stat line is identified by (player_id, game_id), so it doesn't need to be a weak entity.
@@ -60,10 +60,12 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 | Goalies | player_id → catches |
 | Player_History | (player_id, team_id, start_date) → end_date, jersey_number |
 | Games | game_id → all ; (home_team_id, game_date) → game_id ; (away_team_id, game_date) → game_id |
+| Game_Days | game_date → season_year_start |
 | Skater_Game_Stats | (player_id, game_id) → goals, assists, plus_minus, pim |
 | Goalie_Game_Stats | (player_id, game_id) → shots_against, saves, decision |
 
 - **3NF:** every BCNF table is also in 3NF, so no table changes.
+- **BCNF fix (Sprint 2):** Games was not in BCNF, because game_date → season_year_start and game_date is not a key of Games (many games share a date). We moved the pair into Game_Days(game_date, season_year_start), and Games now points to it through game_date. Every table is now in BCNF.
 - **4NF:** no multivalued dependencies, because each player has one nationality and one position. If we later allow several, those move to their own tables (e.g. Player_Nationality).
 
 ## 4. Constraints the ERD can't show

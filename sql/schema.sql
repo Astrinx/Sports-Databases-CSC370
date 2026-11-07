@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS Played_In;
 DROP TABLE IF EXISTS Goalie_Game_Stats;
 DROP TABLE IF EXISTS Skater_Game_Stats;
 DROP TABLE IF EXISTS Games;
+DROP TABLE IF EXISTS Game_Days;
 DROP TABLE IF EXISTS Player_History;
 DROP TABLE IF EXISTS Goalies;
 DROP TABLE IF EXISTS Skaters;
@@ -119,25 +120,41 @@ CREATE TABLE Player_History (
 );
 
 -- -------------------------------------------------------------
+-- Strong entity: Game_Days
+-- Split out of Games because game_date -> season_year_start, and
+-- game_date is not a key of Games (many games share a date).
+-- Key = game_date alone, so it is not a weak entity.
+-- belongs_to: many-one Game_Days -> Seasons
+-- Games are played_on a Game_Day: many-one Games -> Game_Days
+-- -------------------------------------------------------------
+CREATE TABLE Game_Days (
+  game_date         DATE  NOT NULL,
+  season_year_start INT   Not Null,
+  PRIMARY KEY (game_date),
+  FOREIGN KEY (season_year_start) REFERENCES Seasons(season_year_start)
+);
+
+-- -------------------------------------------------------------
 -- Strong entity: Games
 -- Hosts / Visits: two many-one relationships to Teams (two roles)
--- made_of: many-one Games -> Seasons
+-- played_on: many-one Games -> Game_Days (the season is reached through Game_Days)
 -- Score is a composite attribute -> home_score, away_score
+-- game_type: regular or playoff
 -- -------------------------------------------------------------
 CREATE TABLE Games (
   game_id            INT   NOT NULL,
   game_date          DATE  NOT NULL,
   home_team_id       INT   NOT NULL,
   away_team_id       INT   NOT NULL,
-  home_score         INT,                 -- NULL = not played yet
-  away_score         INT,
-  season_year_start  INT   NOT NULL,
+  home_score         INT,  -- NULL = not played yet
+  away_score         INT,  -- NULL = not played yet
+  game_type          ENUM('regular','playoff') NOT NULL DEFAULT 'regular',
   PRIMARY KEY (game_id),
   UNIQUE (home_team_id, game_date),           -- a team hosts <= 1 game per day
   UNIQUE (away_team_id, game_date),           -- a team visits <= 1 game per day
   FOREIGN KEY (home_team_id)      REFERENCES Teams(team_id),
   FOREIGN KEY (away_team_id)      REFERENCES Teams(team_id),
-  FOREIGN KEY (season_year_start) REFERENCES Seasons(season_year_start),
+  FOREIGN KEY (game_date)         REFERENCES Game_Days(game_date),
   CHECK (home_team_id <> away_team_id),
   CHECK (home_score IS NULL OR home_score >= 0),
   CHECK (away_score IS NULL OR away_score >= 0)
