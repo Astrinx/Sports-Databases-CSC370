@@ -20,8 +20,9 @@ JOIN Games   AS g ON (g.game_id   = s.game_id)
 JOIN Game_Days AS d ON (d.game_date = g.game_date)
 WHERE d.season_year_start = 2024
   AND g.game_type = 'regular'
-GROUP BY p.player_id, p.first_name, p.last_name
-ORDER BY points DESC, goals DESC, p.last_name;
+GROUP BY p.player_id
+HAVING SUM(s.goals + s.assists) >= 2
+ORDER BY points DESC, goals DESC, p.last_name;       -- Sprint 2 change: group by player_id only (names allowed since player_id -> name) + HAVING, to show FD attributes and WHERE vs HAVING (module competency 1)
 
 -- -------------------------------------------------------------
 -- Q2: Goalie save percentage for the season (regular season only)
@@ -55,7 +56,12 @@ SELECT t.abbreviation, p.last_name, SUM(s.goals + s.assists) AS points
 FROM Skater_Game_Stats AS s
 JOIN Players AS p ON (p.player_id = s.player_id)
 JOIN Games AS g ON (g.game_id = s.game_id)
-JOIN Player_History AS ph ON (ph.player_id = s.player_id)
+-- Sprint 2 fix: match the stint covering the game date, so a traded player's points count only for the team he was on that day
+JOIN Player_History AS ph
+  ON (ph.player_id = s.player_id
+      AND ph.team_id IN (g.home_team_id, g.away_team_id)
+      AND ph.start_date <= g.game_date
+      AND (ph.end_date IS NULL OR ph.end_date >= g.game_date))
 JOIN Teams AS t ON (t.team_id = ph.team_id)
 WHERE g.game_type = 'regular'
 GROUP BY t.team_id, t.abbreviation, p.player_id, p.last_name
@@ -63,7 +69,11 @@ HAVING SUM(s.goals + s.assists) >= ALL (
   SELECT SUM(s2.goals + s2.assists)
   FROM Skater_Game_Stats AS s2
   JOIN Games AS g2 ON (g2.game_id = s2.game_id)
-  JOIN Player_History AS ph2 ON (ph2.player_id = s2.player_id)
+  JOIN Player_History AS ph2
+    ON (ph2.player_id = s2.player_id
+        AND ph2.team_id IN (g2.home_team_id, g2.away_team_id)
+        AND ph2.start_date <= g2.game_date
+        AND (ph2.end_date IS NULL OR ph2.end_date >= g2.game_date))
   WHERE ph2.team_id = t.team_id
     AND g2.game_type = 'regular'
   GROUP BY s2.player_id
@@ -83,7 +93,12 @@ SELECT t.abbreviation,
        COUNT(DISTINCT s.game_id)    AS games_with_a_goal
 FROM Skater_Game_Stats AS s
 JOIN Games AS g ON (g.game_id = s.game_id)
-JOIN Player_History AS ph ON (ph.player_id = s.player_id)
+-- Sprint 2 fix: match the stint covering the game date, so a traded player's goals count only for the team he was on that day
+JOIN Player_History AS ph
+  ON (ph.player_id = s.player_id
+      AND ph.team_id IN (g.home_team_id, g.away_team_id)
+      AND ph.start_date <= g.game_date
+      AND (ph.end_date IS NULL OR ph.end_date >= g.game_date))
 JOIN Teams AS t ON (t.team_id = ph.team_id)
 WHERE s.goals > 0
   AND g.game_type = 'regular'
@@ -131,6 +146,12 @@ ORDER BY points_per_game DESC, p.last_name;
 SELECT p.first_name, p.last_name, AVG(s.goals + s.assists) AS points_per_game
 FROM Skater_Game_Stats AS s
 JOIN Players AS p ON (p.player_id = s.player_id)
+-- Sprint 2 change: EXISTS adds the existential condition (only skaters with at least one playoff game), completing module competency 2
+WHERE EXISTS (SELECT 1
+              FROM Skater_Game_Stats AS s3
+              JOIN Games AS g3 ON (g3.game_id = s3.game_id)
+              WHERE s3.player_id = s.player_id
+                AND g3.game_type = 'playoff')
 GROUP BY p.player_id, p.first_name, p.last_name
 HAVING AVG(s.goals + s.assists) > (
   SELECT AVG(t.points_per_game)
@@ -147,7 +168,8 @@ ORDER BY points_per_game DESC;
 -- McDavid scored in two games, so he has two matching stat lines.
 -- Without DISTINCT he appears twice; with DISTINCT, once per player.
 -- -------------------------------------------------------------
-SELECT DISTINCT p.first_name, p.last_name
+-- Sprint 2 fix: include player_id so DISTINCT removes duplicate players, not different players who share a name
+SELECT DISTINCT p.player_id, p.first_name, p.last_name
 FROM Skater_Game_Stats AS s
 JOIN Players AS p ON (p.player_id = s.player_id)
 JOIN Games AS g ON (g.game_id = s.game_id)
@@ -159,7 +181,7 @@ ORDER BY p.last_name;
 -- Q9: Regular season vs playoffs.
 -- Each subquery in FROM is one skater's points per game for one game_type;
 -- the two are joined on player_id so each skater appears once, with both
--- numbers side by side. Skaters with no playoff games (Matthews) drop out.
+-- numbers side by side. LEFT JOIN keeps skaters with no playoff games (Matthews) with NULL playoff values.
 -- -------------------------------------------------------------
 SELECT r.last_name,
        r.points_per_game                      AS regular_ppg,
@@ -173,7 +195,8 @@ FROM (
   WHERE g.game_type = 'regular'
   GROUP BY s.player_id, p.last_name
 ) AS r
-JOIN (
+-- Sprint 2 change: LEFT JOIN keeps skaters with no playoff games (Matthews); their playoff columns are NULL, and NULL - number = NULL
+LEFT JOIN (
   SELECT s.player_id, AVG(s.goals + s.assists) AS points_per_game
   FROM Skater_Game_Stats AS s
   JOIN Games AS g ON (g.game_id = s.game_id)
