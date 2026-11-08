@@ -26,3 +26,5 @@
 ### Sprint 2
 - added Game_days table to ensure 4nf on Games table
 - added different game types (playoff/regular)
+- Added rule 6e and updated any other rules that used the Games table sesson_year_start. Now is accessed by the game_days table 
+- Playoff game stats added for two games between EDM - VAN

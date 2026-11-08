@@ -91,7 +91,8 @@ Rule 6c: Every team's arena must exist in the Arena relation.
 R.A.: π_{arena_name}(Teams) ⊆ π_{arena_name}(Arena)
 
 Rule 6d: A season's winning_team must have actually played a game in that season.
-R.A.: π_{season_year_start, home_team_id}(Games ⋈ Game_Days) ∪
+R.A.: π_{season_year_start, winning_team}(σ_{winning_team ≠ NULL}(Seasons)) ⊆
+      π_{season_year_start, home_team_id}(Games ⋈ Game_Days) ∪
       π_{season_year_start, away_team_id}(Games ⋈ Game_Days)
 
 Rule 6e: Every game must be played on a date that exists in Game_Days, and every

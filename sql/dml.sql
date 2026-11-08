@@ -61,6 +61,29 @@ INSERT INTO Goalie_Game_Stats (player_id, game_id, shots_against, saves, decisio
   (5, 1, 28, 25, 'L'),
   (5, 2, 20, 19, 'W');
 
+-- Playoff games (season 2024, played in April 2025): VAN vs EDM
+INSERT INTO Game_Days (game_date, season_year_start) VALUES
+  ('2025-04-20', 2024),
+  ('2025-04-22', 2024);
+
+INSERT INTO Games (game_id, game_date, home_team_id, away_team_id, home_score, away_score, game_type) VALUES
+  (5, '2025-04-20', 1, 2, 1, 2, 'playoff'),
+  (6, '2025-04-22', 2, 1, 1, 2, 'playoff');
+
+INSERT INTO Skater_Game_Stats (player_id, game_id, goals, assists, plus_minus, pim) VALUES
+  (1, 5, 0, 1, -1, 0),
+  (2, 5, 1, 0, -1, 2),
+  (3, 5, 2, 0,  1, 0),
+  (1, 6, 1, 1,  1, 0),
+  (2, 6, 1, 1,  1, 0),
+  (3, 6, 1, 0, -1, 2);
+
+INSERT INTO Goalie_Game_Stats (player_id, game_id, shots_against, saves, decision) VALUES
+  (4, 5, 24, 22, 'L'),
+  (5, 5, 21, 20, 'W'),
+  (4, 6, 18, 17, 'W'),
+  (5, 6, 25, 23, 'L');
+
 
 
 ROLLBACK;
