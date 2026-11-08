@@ -7,6 +7,7 @@
 
 
 DROP TABLE IF EXISTS Played_In;
+DROP TABLE IF EXISTS Game_Stats;      -- old combined stats table from kick-off, replaced by Skater_/Goalie_Game_Stats
 DROP TABLE IF EXISTS Goalie_Game_Stats;
 DROP TABLE IF EXISTS Skater_Game_Stats;
 DROP TABLE IF EXISTS Games;
