@@ -32,6 +32,7 @@
 
 ## SQL scripts
 ### Sprint 2 Goals
+- README: listed known query issues (Q1, Q3, Q4, Q7, Q8, Q9) with planned Sprint 3 fixes
 - queries.sql Q1: group by player_id only + HAVING, to show FD attributes (player_id -> name) and WHERE vs HAVING
 - queries.sql Q3, Q4: Player_History join now matches the stint covering the game date, so a traded player's stats count only for the team he was on that day
 - queries.sql Q7: added WHERE EXISTS (playoff skaters only), the existential condition on top of the average of averages
