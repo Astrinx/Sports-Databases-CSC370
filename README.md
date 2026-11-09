@@ -14,9 +14,14 @@ and the players on those teams, including their per-game stats.
 | `sql/queries.sql` | Queries over the stats |
 | `sql/modify.sql` | Query-driven INSERT / DELETE (in a rolled-back transaction) |
 
-## How to run
+How to run:
+
+Run in this order:
 ```
 mysql -u <user> -p <database> < sql/schema.sql
+mysql -u <user> -p <database> < sql/dml.sql
+mysql -u <user> -p -t <database> < sql/queries.sql
+mysql -u <user> -p -t <database> < sql/modify.sql
 ```
 
 ---
