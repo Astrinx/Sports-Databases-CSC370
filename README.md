@@ -5,11 +5,14 @@ and the players on those teams, including their per-game stats.
 ## Repository layout
 | Path | What it is |
 |------|------------|
-| `docs/ERD.png` | Entity Relationship Diagram |
+| `docs/ERD_NHL_database.png` | Entity Relationship Diagram |
 | `docs/bcnf` | BCNF analysis |
 | `docs/constraints` | Relational Algebra Constraint rule list |
+| `docs/CHANGELOG.md` | Every design change and why |
 | `sql/schema.sql` | SQL DDL (MySQL 8.0.16+) |
-| `CHANGELOG.md` | Every design change and why |
+| `sql/dml.sql` | Sample data |
+| `sql/queries.sql` | Queries over the stats |
+| `sql/modify.sql` | Query-driven INSERT / DELETE (in a rolled-back transaction) |
 
 ## How to run
 ```
