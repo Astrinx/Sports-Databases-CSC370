@@ -31,11 +31,9 @@
 - dml.sql: added playoff games and stats for two EDM - VAN games
 
 ## SQL scripts
-### Sprint 2
-- Added queries.sql: 9 queries over the stats (joins, GROUP BY / HAVING, subqueries, self-join, DISTINCT)
+### Sprint 2 Goals
 - queries.sql Q1: group by player_id only + HAVING, to show FD attributes (player_id -> name) and WHERE vs HAVING
 - queries.sql Q3, Q4: Player_History join now matches the stint covering the game date, so a traded player's stats count only for the team he was on that day
 - queries.sql Q7: added WHERE EXISTS (playoff skaters only), the existential condition on top of the average of averages
 - queries.sql Q8: added player_id to SELECT DISTINCT, so two different players with the same name are not merged
-- queries.sql Q9: LEFT JOIN keeps skaters with no playoff games (Matthews) with NULL playoff values
-- Added modify.sql: INSERT ... SELECT and DELETEs driven by subqueries, NOT EXISTS and GROUP BY / HAVING, inside a transaction that is rolled back (teaching-team feedback from Sprint 1)
+- queries.sql Q9: LEFT JOIN keeps skaters with no playoff games (Matthews) with NULL playoff valuesTS and GROUP BY / HAVING, inside a transaction that is rolled back (teaching-team feedback from Sprint 1)
