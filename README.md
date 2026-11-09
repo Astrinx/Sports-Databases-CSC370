@@ -91,8 +91,8 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 | Teaching-team feedback: written normal forms didn't match the video | Games violation fixed with Game_Days; remaining exception stated | Done | docs/bcnf, section 3 |
 
 How the queries cover this module's competencies:
-- **Aggregation with FD attributes, WHERE and HAVING:** Q1 (groups by player_id only; names allowed since player_id → name)
-- **Subquery aggregating aggregations with an existential condition:** Q7 (average of averages + EXISTS)
+- **Aggregation with WHERE and HAVING:** Q2 (WHERE keeps regular-season rows; HAVING drops goalies with no shots)
+- **Subquery aggregating aggregations:** Q7 (average of each skater's average)
 - **DML with complex predicates:** modify.sql (INSERT … SELECT, DELETE with IN, NOT EXISTS, GROUP BY / HAVING)
 
 ---
@@ -100,12 +100,23 @@ How the queries cover this module's competencies:
 ## Sprint 3 plan
 Covers ACID Transactions, Basic Security and Analysing Query Algorithms. Each goal has an objective measure we can check at the end of the sprint.
 
+## Known issues (found in Sprint 2, fixed in Sprint 3)
+
+| Query | Issue | Planned fix |
+|-------|-------|-------------|
+| Q3, Q4 | Player_History is joined on player_id only, so a traded player's stats would count for every team he played for. Correct on our sample data only because each player has one stint. | Match the stint whose dates cover the game date |
+| Q8 | DISTINCT on names would merge two different players with the same name (the NHL has two Sebastian Ahos) | Add player_id to the SELECT |
+| Q9 | The inner join drops skaters with no playoff games (Matthews) | LEFT JOIN, with NULL playoff values |
+| Q1 | Groups by the names too, so it doesn't rely on player_id → name, and has no HAVING | Group by player_id only + HAVING |
+| Q7 | No existential condition | Add EXISTS (playoff skaters only) |
+| Games | game_date → game_type still holds | Move game_type to Game_Days |
+
 | # | Goal | Competencies covered | Current limitation | Objective measure |
 |---|------|----------------------|--------------------|-------------------|
 | 1 | Record a game safely: one transaction, with triggers enforcing our written rules | Atomicity, Consistency, Triggers | A failure midway leaves half a game; rules 3a, 3b, 4a exist only in relational algebra | Forced error → row counts unchanged after ROLLBACK; 3 of 3 violating inserts rejected |
 | 2 | User roles and a public view | Manages access, Creates views | Every user can change everything, and fans can see private data (birth dates) | fan's INSERT fails with error 1142; fan can read the view but not Players; a row inserted through the view appears in Players |
 | 3 | Index player lookups and analyse the B+-tree | External memory model, Index design | Looking up a player by last name scans the whole table | EXPLAIN goes from type ALL (~5,000 rows) to ref (1 row); lookup, range and insert I/Os calculated and compared |
-| 4 | Analyse and simplify our query plans | SQL to plans, Pushing selections, Simplifies queries | Q1 and Q7 have no plan analysis; Q7 uses a correlated subquery | 3 equivalent plans for Q1 return identical rows; row counts before/after pushing the selection; Q7 rewritten as a join with identical output |
+| 4 | Fix the known query issues and analyse our query plans | Ternary logic (NULLs), SQL to plans, Pushing selections, Simplifies queries | See Known issues; no plan analysis yet | Add a traded player to the test data: fixed Q3/Q4 count his points for the right team only; Q9 shows Matthews with NULL; 3 equivalent plans for Q1 return identical rows; Q7 rewritten as a join with identical output |
 | 5 | (stretch) Concurrency and recovery tests | Isolation, Durability | No tests of concurrent updates or data recovery | Anomaly appears at READ COMMITTED and not at REPEATABLE READ; row counts after log replay equal the counts before the drop |
 | 6 | Move game_type to Game_Days | Normal forms (carry-over) | game_date → game_type still holds in Games | Every table's FDs have a key on the left side |
 ---
