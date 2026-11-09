@@ -81,7 +81,34 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 
 ---
 
-## Next sprint
-- Add game_type (regular / playoff) to Games
-- Write queries over the stats
-- Insert and delete data based on query predicates (SQL DML)
+## Sprint 2 goals (this sprint)
+| Goal | Success criterion | Status | Evidence |
+|------|-------------------|--------|----------|
+| Add game_type (regular / playoff) to Games | `DESCRIBE Games` shows it; any other value is rejected | Done | schema.sql |
+| Write queries over the stats | Each query returns the hand-checked result on our sample data | Done | queries.sql (Q1–Q9) |
+| Insert and delete data based on query predicates | Each block's count changes as commented (0→3, 5→4, 5→4, 11→10) and is restored after ROLLBACK | Done | modify.sql |
+| Teaching-team feedback: query-driven DML was missing | Same as above | Done | modify.sql |
+| Teaching-team feedback: written normal forms didn't match the video | Games violation fixed with Game_Days; remaining exception stated | Done | docs/bcnf, section 3 |
+
+How the queries cover this module's competencies:
+- **Aggregation with FD attributes, WHERE and HAVING:** Q1 (groups by player_id only; names allowed since player_id → name)
+- **Subquery aggregating aggregations with an existential condition:** Q7 (average of averages + EXISTS)
+- **DML with complex predicates:** modify.sql (INSERT … SELECT, DELETE with IN, NOT EXISTS, GROUP BY / HAVING)
+
+---
+
+## Sprint 3 plan
+Covers ACID Transactions, Basic Security and Analysing Query Algorithms. Each goal has an objective measure we can check at the end of the sprint.
+
+| # | Goal | Competencies covered | Current limitation | Objective measure |
+|---|------|----------------------|--------------------|-------------------|
+| 1 | Record a game safely: one transaction, with triggers enforcing our written rules | Atomicity, Consistency, Triggers | A failure midway leaves half a game; rules 3a, 3b, 4a exist only in relational algebra | Forced error → row counts unchanged after ROLLBACK; 3 of 3 violating inserts rejected |
+| 2 | User roles and a public view | Manages access, Creates views | Every user can change everything, and fans can see private data (birth dates) | fan's INSERT fails with error 1142; fan can read the view but not Players; a row inserted through the view appears in Players |
+| 3 | Index player lookups and analyse the B+-tree | External memory model, Index design | Looking up a player by last name scans the whole table | EXPLAIN goes from type ALL (~5,000 rows) to ref (1 row); lookup, range and insert I/Os calculated and compared |
+| 4 | Analyse and simplify our query plans | SQL to plans, Pushing selections, Simplifies queries | Q1 and Q7 have no plan analysis; Q7 uses a correlated subquery | 3 equivalent plans for Q1 return identical rows; row counts before/after pushing the selection; Q7 rewritten as a join with identical output |
+| 5 | (stretch) Concurrency and recovery tests | Isolation, Durability | No tests of concurrent updates or data recovery | Anomaly appears at READ COMMITTED and not at REPEATABLE READ; row counts after log replay equal the counts before the drop |
+| 6 | Move game_type to Game_Days | Normal forms (carry-over) | game_date → game_type still holds in Games | Every table's FDs have a key on the left side |
+---
+
+## Use of AI
+We used Claude (Anthropic) to review our ERD and queries and to explain our errors. Our team made every design decision (Game_Days, game_type, which queries to write), and we ran and checked all SQL ourselves.
