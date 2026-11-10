@@ -56,7 +56,7 @@ mysql -u <user> -p -t <database> < sql/modify.sql
 - **Player_History (kept weak):** it has no key of its own. Key = player_id + team_id + start_date. We kept it weak instead of making it a Players–Teams relationship because a relationship can only hold each (player, team) pair once, and a player can return to the same team twice.
 
 ## 3. Normal forms
-Functional dependencies (FDs) for each table. Every left side is a key, so each table is in BCNF.
+Functional dependencies (FDs) for each table. Every left side is a key, so each table is in BCNF, except Games (see the exception below).
 
 | Table | FDs |
 |-------|-----|
@@ -67,7 +67,7 @@ Functional dependencies (FDs) for each table. Every left side is a key, so each 
 | Skaters | player_id → position, shoots |
 | Goalies | player_id → catches |
 | Player_History | (player_id, team_id, start_date) → end_date, jersey_number |
-| Games | game_id → all ; (home_team_id, game_date) → game_id ; (away_team_id, game_date) → game_id |
+| Games | game_id → all ; (home_team_id, game_date) → game_id ; (away_team_id, game_date) → game_id ; game_date → game_type |
 | Game_Days | game_date → season_year_start |
 | Skater_Game_Stats | (player_id, game_id) → goals, assists, plus_minus, pim |
 | Goalie_Game_Stats | (player_id, game_id) → shots_against, saves, decision |
@@ -109,7 +109,6 @@ Covers ACID Transactions, Basic Security and Analysing Query Algorithms. Each go
 | Q9 | The inner join drops skaters with no playoff games (Matthews) | LEFT JOIN, with NULL playoff values |
 | Q1 | Groups by the names too, so it doesn't rely on player_id → name, and has no HAVING | Group by player_id only + HAVING |
 | Q7 | No existential condition | Add EXISTS (playoff skaters only) |
-| Games | game_date → game_type still holds | Move game_type to Game_Days |
 
 | # | Goal | Competencies covered | Current limitation | Objective measure |
 |---|------|----------------------|--------------------|-------------------|
@@ -118,7 +117,6 @@ Covers ACID Transactions, Basic Security and Analysing Query Algorithms. Each go
 | 3 | Index player lookups and analyse the B+-tree | External memory model, Index design | Looking up a player by last name scans the whole table | EXPLAIN goes from type ALL (~5,000 rows) to ref (1 row); lookup, range and insert I/Os calculated and compared |
 | 4 | Fix the known query issues and analyse our query plans | Ternary logic (NULLs), SQL to plans, Pushing selections, Simplifies queries | See Known issues; no plan analysis yet | Add a traded player to the test data: fixed Q3/Q4 count his points for the right team only; Q9 shows Matthews with NULL; 3 equivalent plans for Q1 return identical rows; Q7 rewritten as a join with identical output |
 | 5 | (stretch) Concurrency and recovery tests | Isolation, Durability | No tests of concurrent updates or data recovery | Anomaly appears at READ COMMITTED and not at REPEATABLE READ; row counts after log replay equal the counts before the drop |
-| 6 | Move game_type to Game_Days | Normal forms (carry-over) | game_date → game_type still holds in Games | Every table's FDs have a key on the left side |
 ---
 
 ## Use of AI
